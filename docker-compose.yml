@@ -1,0 +1,12 @@
+services:
+  educampo-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: educampo_frontend_insights
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+    restart: always

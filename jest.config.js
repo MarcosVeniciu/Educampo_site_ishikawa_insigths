@@ -1,11 +1,19 @@
-const { createDefaultPreset } = require("ts-jest");
-
-const tsJestTransformCfg = createDefaultPreset().transform;
-
-/** @type {import("jest").Config} **/
 module.exports = {
-  testEnvironment: "node",
+  preset: 'ts-jest',
+  testEnvironment: 'jest-environment-jsdom',
+  
+  // Ensina o Jest a entender o atalho "@/" do TypeScript
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/$1',
+  },
+  
+  // Limpa os mocks automaticamente entre um teste e outro
+  clearMocks: true,
+  
+  // Diz ao Jest para usar o ts-jest para compilar os arquivos TypeScript/React
   transform: {
-    ...tsJestTransformCfg,
+    '^.+\\.(ts|tsx|js|jsx)$': ['ts-jest', {
+      tsconfig: 'tsconfig.json',
+    }],
   },
 };
