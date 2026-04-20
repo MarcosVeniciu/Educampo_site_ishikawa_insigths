@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 
 /**
@@ -25,6 +25,7 @@ interface PainelLayoutProps {
  */
 export default function PainelLayout({ children }: PainelLayoutProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [isAuth, setIsAuth] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -75,8 +76,10 @@ export default function PainelLayout({ children }: PainelLayoutProps) {
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
       {/* Componente Global de Navegação Lateral */}
-      <Sidebar />
-
+      <Sidebar 
+        pathnameAtual={pathname || ""} 
+        aoNavegar={(path) => router.push(path)} 
+      />
       {/* Content Wrapper */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Header Global do Painel */}

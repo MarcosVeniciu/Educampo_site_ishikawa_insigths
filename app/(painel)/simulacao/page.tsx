@@ -50,7 +50,7 @@ export default function App() {
     const custosFixos = (2.45 * 28.5 * 85 * 30.5) * 0.35;
     
     const margemLiquida = faturamentoMensal - custoAlimentacaoMensal - custosFixos;
-    const pontoEquilibrio = custosFixos / (scenario.precoLeite - (scenario.custoAlimentacaoMensal / (scenario.producaoVaca * scenario.numVacas * 30.5) || 1)); // Lógica fictícia para visualização
+    const pontoEquilibrio = custosFixos / (scenario.precoLeite - (custoAlimentacaoMensal / (scenario.producaoVaca * scenario.numVacas * 30.5) || 1)); // Lógica fictícia para visualização
 
     return {
       faturamento: faturamentoMensal,
