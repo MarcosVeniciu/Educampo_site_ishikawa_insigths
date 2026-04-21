@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+/* Configurações globais para garantir que o fundo ocupe 100% da tela */
+@layer base {
+  html, body {
+    @apply h-full m-0 p-0;
+    background-color: #f8fafc; /* slate-50 */
+  }
+}
