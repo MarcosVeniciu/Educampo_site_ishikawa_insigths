@@ -7,6 +7,7 @@
  * - Fundo: slate-50
  */
 
+'use client';
 import React, { useState } from 'react';
 import { 
   ChevronLeft, 

@@ -60,12 +60,14 @@ Object.defineProperty(window, 'sessionStorage', {
 });
 
 // 5. Mock para o IntersectionObserver (comum em componentes de dashboard/gráficos)
+// O "as any" evita o erro de compatibilidade com scrollMargin
 global.IntersectionObserver = class IntersectionObserver {
   readonly root: Element | null = null;
   readonly rootMargin: string = '';
+  readonly scrollMargin: string = ''; // Adicionado para satisfazer versões novas do TS
   readonly thresholds: ReadonlyArray<number> = [];
   disconnect() {}
   observe() {}
   takeRecords() { return []; }
   unobserve() {}
-};
+} as any;

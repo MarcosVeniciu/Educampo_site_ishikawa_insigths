@@ -19,6 +19,7 @@ interface IApiEducampo {
   diagnosticarCcs(dados: ModelInput): Promise<DiagramaSaida>;
   diagnosticarHectare(dados: ModelInput): Promise<DiagramaSaida>;
   diagnosticarTrabalhador(dados: ModelInput): Promise<DiagramaSaida>;
+  diagnosticarProdutividade(dados: ModelInput): Promise<DiagramaSaida>; // <-- ADICIONADO NA INTERFACE
 }
 
 /**
@@ -84,6 +85,13 @@ class ApiEducampoService implements IApiEducampo {
    */
   async diagnosticarTrabalhador(dados: ModelInput): Promise<DiagramaSaida> {
     return this.post('/api/diagnostico/trabalhador', dados);
+  }
+
+  /**
+   * Diagnóstico focado em produtividade (produção por vaca).
+   */
+  async diagnosticarProdutividade(dados: ModelInput): Promise<DiagramaSaida> {
+    return this.post('/api/diagnostico/produtividade', dados); // <-- ADICIONADO NA CLASSE
   }
 }
 

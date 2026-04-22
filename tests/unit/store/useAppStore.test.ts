@@ -73,16 +73,16 @@ describe('Store Global (useAppStore) - Contratos de Negócio e Segurança', () =
   it('deve armazenar os dados da fazenda corretamente no estado global', () => {
     const store = useAppStore.getState();
     
-    // Inicialmente deve estar vazio
-    expect(store.fazenda).toBeNull();
+    // Inicialmente deve estar vazio (Alterado de fazenda para dadosFazenda)
+    expect(store.dadosFazenda).toBeNull();
 
     // Inserindo dados
     store.setFazenda(mockFazenda);
 
     // Validando a persistência em memória
     const storeAtualizada = useAppStore.getState();
-    expect(storeAtualizada.fazenda).toEqual(mockFazenda);
-    expect(storeAtualizada.fazenda?.nome_fazenda).toBe('Fazenda Esperança');
+    expect(storeAtualizada.dadosFazenda).toEqual(mockFazenda);
+    expect(storeAtualizada.dadosFazenda?.nome_fazenda).toBe('Fazenda Esperança');
   });
 
   /**
@@ -104,19 +104,23 @@ describe('Store Global (useAppStore) - Contratos de Negócio e Segurança', () =
    * Teste de Limpeza de Estado (Logout):
    * Garante que, ao sair do sistema, os dados sensíveis da fazenda sejam apagados da memória.
    */
-  it('deve limpar todos os dados da memória (Fazenda e Diagnósticos) ao executar clearData', () => {
+  it('deve limpar todos os dados da memória (Fazenda, Diagnósticos, Referências) ao executar clearData', () => {
     const store = useAppStore.getState();
     
-    // Poluindo o estado
+    // Poluindo o estado com todos os dados possíveis
     store.setFazenda(mockFazenda);
     store.setDiagnostico('trabalhador', mockDiagnostico);
+    store.setReferencias({ metas: "alguma_meta" });
+    store.setLoaded(true);
     
     // Executando a limpeza
     store.clearData();
 
-    // Verificando se tudo foi resetado
+    // Verificando se tudo foi resetado corretamente
     const storeLimpa = useAppStore.getState();
-    expect(storeLimpa.fazenda).toBeNull();
+    expect(storeLimpa.dadosFazenda).toBeNull();
     expect(Object.keys(storeLimpa.diagnosticos).length).toBe(0);
+    expect(storeLimpa.referencias).toBeNull();
+    expect(storeLimpa.isLoaded).toBe(false);
   });
 });

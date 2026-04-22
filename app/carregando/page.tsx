@@ -4,7 +4,7 @@ import React, { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, Tractor } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
-import { fetchDiagnostico } from '@/services/apiEducampo';
+import { apiEducampo } from '@/services/apiEducampo'; // <-- IMPORTAÇÃO CORRIGIDA
 import { fetchVariaveisReferencia } from '@/services/apiVariaveis';
 
 /**
@@ -37,6 +37,7 @@ export default function LoadingPage() {
         hasFetched.current = true;
 
         // Dispara as requisições em paralelo para reduzir o tempo de espera (Promise.all)
+        // CHAMADAS DA API CORRIGIDAS PARA USAR A NOVA CLASSE
         const [
           resTrabalhador,
           resHectare,
@@ -44,10 +45,10 @@ export default function LoadingPage() {
           resCcs,
           resRefs
         ] = await Promise.all([
-          fetchDiagnostico('trabalhador', dadosFazenda),
-          fetchDiagnostico('hectare', dadosFazenda),
-          fetchDiagnostico('produtividade', dadosFazenda),
-          fetchDiagnostico('ccs', dadosFazenda),
+          apiEducampo.diagnosticarTrabalhador(dadosFazenda),
+          apiEducampo.diagnosticarHectare(dadosFazenda),
+          apiEducampo.diagnosticarProdutividade(dadosFazenda),
+          apiEducampo.diagnosticarCcs(dadosFazenda),
           fetchVariaveisReferencia(dadosFazenda.sistema_producao)
         ]);
 
