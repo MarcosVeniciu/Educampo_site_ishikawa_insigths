@@ -1,4 +1,4 @@
-import { ReferenciasGlobais } from './types';
+import { ReferenciasGlobais } from './index';
 
 /**
  * Mock de variáveis de referência e potenciais de mercado.

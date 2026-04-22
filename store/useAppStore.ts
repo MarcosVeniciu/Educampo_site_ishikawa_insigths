@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { DiagramaSaida, ModelInput } from '@/services/apiEducampo/types';
-import { VariaveisReferencia } from '@/services/apiVariaveis/types';
+import { VariaveisReferencia } from '@/services/apiVariaveis/index';
 
 /**
  * Interface que define o estado global da aplicação.
