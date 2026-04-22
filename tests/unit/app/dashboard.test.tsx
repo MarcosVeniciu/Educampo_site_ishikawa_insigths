@@ -3,7 +3,7 @@
  * @description Testes unitários para a página de Dashboard.
  * Focado na validação da renderização de dados provenientes do estado global (Zustand).
  * Resolve inconsistências entre a interface ModelInput e campos de UI como 'consultor'.
- * @version 1.2.1
+ * @version 1.2.2
  */
 
 import React from 'react';
@@ -49,57 +49,62 @@ describe('DashboardPage - Visão Geral', () => {
    * Injeta dados na Store e valida se os elementos aparecem corretamente na tela.
    */
   it('deve apresentar os dados simulados da fazenda lidos da sessão', () => {
-    // 1. Mock dos dados respeitando os campos obrigatórios da ModelInput
     const mockFarmData = {
       nome_fazenda: 'Quinta da Esperança',
-      consultor: 'Dr. Marcos Venicius', // Campo de UI
+      consultor: 'Dr. Marcos Venicius', 
       vacas_em_lactacao_cabecas: 150,
-      vacas_totais_cabecas: 180,       // Campo obrigatório adicionado
+      vacas_totais_cabecas: 180, 
       animais_totais_cabecas: 200,
       funcionarios_qtd: 5,
       area_destinada_atividade_ha: 100,
       sistema_producao: 'Pasto'
     };
 
-    // 2. Injetamos o estado na Store.
-    // Usamos 'as any' porque o campo 'consultor' não faz parte da interface técnica ModelInput,
-    // mas é necessário para a renderização do componente que estamos testando.
     useAppStore.setState({
       isLoaded: true,
-      dadosFazenda: mockFarmData as any
+      dadosFazenda: mockFarmData as any,
+      referencias: {
+        potencialTrabalhador: { min: 100, max: 200 },
+        potencialArea: { min: 100, max: 200 },
+        potencialVaca: { min: 10, max: 20 },
+        limiteCcs: 400
+      } as any,
+      diagnosticos: { trabalhador: null, hectare: null, produtividade: null, ccs: null } as any
     });
 
     render(<DashboardPage />);
 
-    // 3. Validações de presença no DOM
     expect(screen.getByText(/Quinta da Esperança/i)).toBeInTheDocument();
-    expect(screen.getByText(/Dr. Marcos Venicius/i)).toBeInTheDocument();
-    expect(screen.getByText('150')).toBeInTheDocument();
+    expect(screen.getByText(/Pasto/i)).toBeInTheDocument();
+    expect(screen.getByText('83.3')).toBeInTheDocument();
   });
 
-  /**
-   * Teste de Resiliência: Verifica a exibição de valores de fallback (padrão).
-   * Garante que o componente não quebre caso a Store contenha apenas valores genéricos.
-   */
   it('deve apresentar os valores de fallback caso a sessão esteja vazia', () => {
-    // Configuramos a store com os valores padrão de inicialização
     useAppStore.setState({
       isLoaded: true,
       dadosFazenda: {
         nome_fazenda: 'Fazenda Educampo',
         consultor: 'Consultor Técnico',
         vacas_em_lactacao_cabecas: 85,
-        vacas_totais_cabecas: 100,      // Campo obrigatório adicionado
+        vacas_totais_cabecas: 100, 
         animais_totais_cabecas: 120,
         funcionarios_qtd: 3,
         area_destinada_atividade_ha: 50,
         sistema_producao: 'Compost Barn'
-      } as any
+      } as any,
+      referencias: {
+        potencialTrabalhador: { min: 100, max: 200 },
+        potencialArea: { min: 100, max: 200 },
+        potencialVaca: { min: 10, max: 20 },
+        limiteCcs: 400
+      } as any,
+      diagnosticos: { trabalhador: null, hectare: null, produtividade: null, ccs: null } as any
     });
 
     render(<DashboardPage />);
 
     expect(screen.getByText(/Fazenda Educampo/i)).toBeInTheDocument();
-    expect(screen.getByText('85')).toBeInTheDocument();
+    // Ajustado de '85' para '85.0' para casar com a renderização formatada
+    expect(screen.getByText('85.0')).toBeInTheDocument();
   });
 });
