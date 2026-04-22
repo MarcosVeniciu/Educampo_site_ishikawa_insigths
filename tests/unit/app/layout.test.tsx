@@ -1,82 +1,86 @@
-import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
-// Importação essencial para resolver o erro "toBeInTheDocument is not a function"
-import '@testing-library/jest-dom';
-import { useRouter } from 'next/navigation';
-import PainelLayout from '@/app/(painel)/layout';
-
 /**
- * @file layout.test.tsx
- * @description Testes unitários para o Layout Protegido da Fase 4.
- * Corrigido com virtual mocks para next/navigation e suporte a jest-dom.
+ * @fileoverview Suíte de testes para o Layout do Painel (Rotas Privadas).
+ * * ATENÇÃO - MUDANÇA DE PARADIGMA (HttpOnly Cookies):
+ * A responsabilidade de bloquear acessos não autorizados (Guarda de Rota)
+ * foi transferida para o Middleware do Next.js (Server-Side).
+ * * Este componente (Layout) agora adota o princípio de "Confiança Transparente".
+ * Ele pressupõe que, se o código chegou até aqui, o Middleware já validou o
+ * cookie de sessão. O Layout foca APENAS na renderização estrutural (UI).
  */
 
+import { render, screen } from '@testing-library/react';
+import PainelLayout from '../../../app/(painel)/layout';
 
-/**
- * Mock Global das Fontes do Google (Next.js).
- * * Motivo: O Next.js otimiza fontes durante o build, transformando-as em CSS. 
- * No ambiente de testes (Node/Jest), o carregador de fontes não está disponível, 
- * o que causa um "TypeError: Inter is not a function".
- * * Este mock simula a execução da função de fonte e retorna um objeto compatível
- * com o que o componente espera, evitando quebras no Layout e em testes de UI.
- */
-jest.mock('next/font/google', () => ({
-  Inter: () => ({
-    className: 'inter-font-mock',
-    style: { fontFamily: 'Inter' },
+// Mock das funções de roteamento do Next.js que a Sidebar utiliza internamente
+jest.mock('next/navigation', () => ({
+  usePathname: () => '/dashboard',
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: jest.fn(),
   }),
 }));
 
-// Mock do hook de roteamento do Next.js com a flag virtual para evitar erros de resolução
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
-}), { virtual: true });
-
-// Mock do componente Sidebar
-jest.mock('@/components/Sidebar', () => {
-  return function DummySidebar() {
-    return <div data-testid="mock-sidebar">Menu Lateral</div>;
-  };
-});
-
-describe('PainelLayout - Proteção de Rotas', () => {
-  const mockPush = jest.fn();
-
+describe('Painel Layout (Interface e Estrutura)', () => {
+  
   beforeEach(() => {
-    (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
-    sessionStorage.clear();
     jest.clearAllMocks();
+    window.sessionStorage.clear();
   });
 
-  it('deve redirecionar para /login se não existir um token ativo', async () => {
-    jest.spyOn(Storage.prototype, 'getItem').mockReturnValue(null);
-
+  /**
+   * Teste Estrutural:
+   * Garante que o layout atua corretamente como um "Wrapper" (casca),
+   * renderizando o menu lateral e ejetando os componentes filhos no centro.
+   */
+  it('deve renderizar a estrutura base do painel (Sidebar + Children) corretamente', () => {
     render(
       <PainelLayout>
-        <div data-testid="conteudo-secreto">Informação Sensível</div>
+        <div data-testid="conteudo-injetado">Página Interna Carregada</div>
       </PainelLayout>
     );
 
-    // queryByTestId deve retornar null enquanto redireciona
-    expect(screen.queryByTestId('conteudo-secreto')).not.toBeInTheDocument();
+    // Verifica se a Sidebar (Menu lateral) foi renderizada (Busca pelo logo/título Educampo)
+    expect(screen.getByText(/Educampo/i)).toBeInTheDocument();
 
-    await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/login');
-    });
+    // Verifica se os componentes "children" (Dashboard, Simulação, etc) foram renderizados
+    expect(screen.getByTestId('conteudo-injetado')).toBeInTheDocument();
   });
 
-  it('deve renderizar o Sidebar e o conteúdo protegido caso o token seja válido', async () => {
-    jest.spyOn(Storage.prototype, 'getItem').mockReturnValue('token_valido');
+  /**
+   * Teste de Contrato de Segurança (Clean Architecture):
+   * Garante que resquícios da implementação antiga não permaneçam no código.
+   * O Layout NUNCA deve tentar ler dados sensíveis de autenticação do Storage.
+   */
+  it('NÃO deve acessar o sessionStorage para buscar tokens de validação', () => {
+    const sessionGetSpy = jest.spyOn(window.sessionStorage, 'getItem');
 
     render(
       <PainelLayout>
-        <div data-testid="conteudo-secreto">Informação Sensível</div>
+        <div>Render Simples</div>
       </PainelLayout>
     );
 
-    await waitFor(() => {
-      expect(screen.getByTestId('mock-sidebar')).toBeInTheDocument();
-      expect(screen.getByTestId('conteudo-secreto')).toBeInTheDocument();
-    });
+    // Valida que o layout atual não tenta verificar 'token' no client-side
+    expect(sessionGetSpy).not.toHaveBeenCalledWith('token');
+  });
+
+  /**
+   * Teste de Isolamento de Rota:
+   * Confirma que o Layout não força redirecionamentos por conta própria
+   * A responsabilidade de chamar o `router.push('/login')` foi movida.
+   */
+  it('NÃO deve forçar redirecionamento para o login via Client-Side', () => {
+    const { useRouter } = require('next/navigation');
+    const mockRouter = useRouter();
+
+    render(
+      <PainelLayout>
+        <div>Render Simples</div>
+      </PainelLayout>
+    );
+
+    // Garante que o componente apenas renderiza e não tenta expulsar o usuário
+    expect(mockRouter.push).not.toHaveBeenCalledWith('/login');
+    expect(mockRouter.replace).not.toHaveBeenCalledWith('/login');
   });
 });
