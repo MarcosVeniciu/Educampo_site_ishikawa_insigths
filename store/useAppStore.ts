@@ -1,9 +1,11 @@
 /**
  * @fileoverview Gerenciamento de Estado Global utilizando Zustand.
  * Refatoração da Fase 4 (Finalização da Migração para HttpOnly Cookies).
+ * Adicionada persistência em sessionStorage para evitar perda de estado em navegação/F5.
  */
 
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware'; // Importações necessárias para persistência
 import { ModelInput, DiagramaSaida } from '@/services/apiEducampo/types';
 
 /**
@@ -49,38 +51,48 @@ interface AppState {
 }
 
 /**
- * Hook customizado useAppStore para acesso ao estado global.
+ * Hook customizado useAppStore para acesso ao estado global com Persistência.
+ * O middleware 'persist' salva o estado no sessionStorage, permitindo que os
+ * dados sobrevivam a recarregamentos de página e navegações entre rotas.
  */
-export const useAppStore = create<AppState>((set) => ({
-  // Estado Inicial
-  dadosFazenda: null,
-  diagnosticos: {},
-  referencias: null,
-  isLoaded: false,
-
-  // Ações (Actions)
-  setFazenda: (dados) => 
-    set({ dadosFazenda: dados }),
-
-  setDiagnostico: (tipo, resultado) => 
-    set((state) => ({ 
-      diagnosticos: { 
-        ...state.diagnosticos, 
-        [tipo]: resultado 
-      } 
-    })),
-
-  setReferencias: (refs) => 
-    set({ referencias: refs }),
-
-  setLoaded: (loaded) => 
-    set({ isLoaded: loaded }),
-
-  clearData: () => 
-    set({ 
-      dadosFazenda: null, 
+export const useAppStore = create<AppState>()(
+  persist(
+    (set) => ({
+      // Estado Inicial
+      dadosFazenda: null,
       diagnosticos: {},
       referencias: null,
-      isLoaded: false
+      isLoaded: false,
+
+      // Ações (Actions)
+      setFazenda: (dados) => 
+        set({ dadosFazenda: dados }),
+
+      setDiagnostico: (tipo, resultado) => 
+        set((state) => ({ 
+          diagnosticos: { 
+            ...state.diagnosticos, 
+            [tipo]: resultado 
+          } 
+        })),
+
+      setReferencias: (refs) => 
+        set({ referencias: refs }),
+
+      setLoaded: (loaded) => 
+        set({ isLoaded: loaded }),
+
+      clearData: () => 
+        set({ 
+          dadosFazenda: null, 
+          diagnosticos: {},
+          referencias: null,
+          isLoaded: false
+        }),
     }),
-}));
+    {
+      name: 'educampo-storage', // Nome da chave no sessionStorage
+      storage: createJSONStorage(() => sessionStorage), // Define o uso do sessionStorage
+    }
+  )
+);

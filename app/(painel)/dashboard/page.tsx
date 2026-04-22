@@ -1,6 +1,17 @@
+/**
+ * @file page.tsx
+ * @description Dashboard do Produtor (Fase 5).
+ * Organizada conforme as imagens de proposta de design (fdff9b.png e fe0a1e.png).
+ * Consome o estado global do Zustand e processa indicadores via Utils.
+ * * CORREÇÃO: Implementação de 'hasHydrated' e 'useEffect' para redirecionamento seguro.
+ * Isso impede que o sistema tente redirecionar o usuário antes do Zustand recuperar
+ * os dados do sessionStorage, resolvendo o loop infinito entre Dashboard e Carregamento.
+ * @version 1.1.0
+ */
+
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   Users, 
@@ -16,18 +27,34 @@ import {
 import { useAppStore } from '@/store/useAppStore';
 import * as calc from '@/utils/calculos';
 
-/**
- * Dashboard do Produtor (Fase 5)
- * Organizada conforme as imagens de proposta de design (fdff9b.png e fe0a1e.png).
- * Consome o estado global do Zustand e processa indicadores via Utils.
- */
 export default function DashboardPage() {
   const router = useRouter();
   const { dadosFazenda, diagnosticos, referencias, isLoaded } = useAppStore();
+  
+  // ✅ ESTADO DE HIDRATAÇÃO: Garante que o componente espere o Zustand ler o storage
+  const [hasHydrated, setHasHydrated] = useState(false);
 
-  // Proteção: Se o estado for perdido (F5 sem persistência ou navegação direta), redireciona para carregar
-  if (!isLoaded || !dadosFazenda || !referencias) {
-    if (typeof window !== 'undefined') router.push('/carregando');
+  useEffect(() => {
+    setHasHydrated(true);
+  }, []);
+
+  /**
+   * ✅ PROTEÇÃO DE ROTA (Efeito de Redirecionamento Seguro)
+   * Só executa a lógica de redirecionamento após a hidratação completa.
+   */
+  useEffect(() => {
+    if (!hasHydrated) return;
+
+    if (!isLoaded || !dadosFazenda || !referencias) {
+      router.push('/carregando');
+    }
+  }, [hasHydrated, isLoaded, dadosFazenda, referencias, router]);
+
+  /**
+   * Enquanto os dados não estão prontos, a hidratação não ocorreu 
+   * ou o redirecionamento está em curso, retornamos null.
+   */
+  if (!hasHydrated || !isLoaded || !dadosFazenda || !referencias) {
     return null;
   }
 
