@@ -7,10 +7,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAppStore } from '@/store/useAppStore'; // <-- Importado o Zustand
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('produtor@educampo.com.br');
-  const [password, setPassword] = useState('senha123');
+  const [email, setEmail] = useState('joao@fazendaesperanca.com.br');
+  const [password, setPassword] = useState('SenhaForte123!');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
@@ -36,7 +37,22 @@ export default function LoginPage() {
         throw new Error(data.error || 'Falha na autenticação. Verifique e-mail e senha.');
       }
 
-      router.push('/dashboard');
+      // ✅ 1. Guarda os dados retornados pela API (ou Mock) na Store Global
+      useAppStore.getState().setFazenda({
+        nome_fazenda: "Fazenda Educampo",
+        sistema_producao: "Compost Barn",
+        vacas_em_lactacao_cabecas: 100,
+        vacas_totais_cabecas: 120,
+        animais_totais_cabecas: 150,
+        funcionarios_qtd: 5,
+        area_destinada_atividade_ha: 50.5
+      });
+
+      // ✅ 2. Garante que isLoaded comece como 'false' para acionar o loading
+      useAppStore.getState().setLoaded(false);
+
+      // ✅ 3. Redireciona para a tela de Carregamento primeiro!
+      router.push('/carregando');
       
     } catch (err: any) {
       setError(err.message);

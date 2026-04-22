@@ -1,15 +1,11 @@
 /**
  * @fileoverview Componente de Menu Lateral (Sidebar) com suporte a Responsividade (Mobile).
  * Implementa a paleta de cores Azul Educampo e o comportamento de Drawer para smartphones.
- * * * Cores (Padrão 60/30/10):
- * - Primária (Ação): blue-600
- * - Estrutura (Sidebar): blue-950
- * - Fundo: slate-50
  */
 
 'use client';
 import React, { useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation'; // Importação dos hooks do Next.js
+import { usePathname, useRouter } from 'next/navigation';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -18,14 +14,11 @@ import {
   LayoutDashboard, 
   GitMerge, 
   TrendingUp, 
-  Settings
+  Settings,
+  LogOut // ✅ Adicionado
 } from 'lucide-react';
+import { useAppStore } from '@/store/useAppStore'; // ✅ Adicionado para o Logout
 
-/**
- * MOCK LOCAL DA CONFIGURAÇÃO DE NAVEGAÇÃO
- * Nota: No seu VS Code, você pode remover esta constante e descomentar o import:
- * import { navigationConfig } from '../config/navigation';
- */
 const navigationConfig = [
   {
     label: 'Dashboard',
@@ -53,47 +46,41 @@ const navigationConfig = [
   }
 ];
 
-/**
- * Propriedades esperadas pelo componente Sidebar.
- * Tornadas OPCIONAIS para permitir que o componente funcione de forma autônoma (via Hooks)
- * ou controlada (via Props, mantendo compatibilidade com o componente App de visualização).
- * @interface SidebarProps
- */
 export interface SidebarProps {
   pathnameAtual?: string;
   aoNavegar?: (path: string) => void;
 }
 
-/**
- * Componente Sidebar com suporte a Mobile Drawer e Identidade Visual Azul.
- */
 export default function Sidebar({ pathnameAtual, aoNavegar }: SidebarProps) {
-  // Hooks do Next.js para navegação autônoma
   const router = useRouter();
   const pathNameHook = usePathname();
-
-  // Determina a rota ativa: prioriza a prop (se enviada) ou o hook do Next.js
   const rotaAtiva = pathnameAtual || pathNameHook || '';
 
-  // Estado para controle de expansão no Desktop
   const [expandido, setExpandido] = useState(true);
-  // Estado para controle do menu flutuante (Drawer) no Mobile
   const [mobileAberto, setMobileAberto] = useState(false);
 
-  /**
-   * Alterna a visibilidade da sidebar em telas menores.
-   */
   const alternarMobile = () => setMobileAberto(!mobileAberto);
-
-  /**
-   * Alterna a largura da sidebar em telas grandes (Desktop).
-   */
   const alternarExpansao = () => setExpandido(!expandido);
 
   /**
-   * Executa a navegação: prioriza a função de callback ou usa o router do Next.js.
-   * @param {string} path - Rota de destino.
+   * ✅ Lógica de Desconexão (Logout)
    */
+  const handleLogout = async () => {
+    // 1. Limpa o estado global e o sessionStorage
+    useAppStore.getState().clearData();
+    sessionStorage.clear(); 
+    
+    // 2. Chama a rota DELETE para remover o cookie seguro
+    try {
+      await fetch('/api/auth', { method: 'DELETE' });
+    } catch (e) {
+      console.error('Erro ao deslogar:', e);
+    }
+    
+    router.push('/login');
+    setMobileAberto(false);
+  };
+
   const handleNavegacao = (path: string) => {
     if (aoNavegar) {
       aoNavegar(path);
@@ -105,7 +92,7 @@ export default function Sidebar({ pathnameAtual, aoNavegar }: SidebarProps) {
 
   return (
     <>
-      {/* Gatilho Hambúrguer (Apenas Mobile) */}
+      {/* Gatilho Mobile */}
       <div className="lg:hidden fixed top-4 left-4 z-50">
         <button
           onClick={alternarMobile}
@@ -116,7 +103,6 @@ export default function Sidebar({ pathnameAtual, aoNavegar }: SidebarProps) {
         </button>
       </div>
 
-      {/* Camada de Escurecimento (Overlay) para Mobile */}
       {mobileAberto && (
         <div 
           className="lg:hidden fixed inset-0 bg-slate-900/60 z-40 backdrop-blur-sm animate-in fade-in duration-300"
@@ -125,7 +111,6 @@ export default function Sidebar({ pathnameAtual, aoNavegar }: SidebarProps) {
         />
       )}
 
-      {/* Sidebar Principal */}
       <aside
         className={`
           fixed inset-y-0 left-0 z-40 flex flex-col bg-blue-950 border-r border-blue-900 
@@ -134,7 +119,6 @@ export default function Sidebar({ pathnameAtual, aoNavegar }: SidebarProps) {
           ${expandido ? 'lg:w-64' : 'lg:w-20'}
         `}
       >
-        {/* Cabeçalho da Sidebar (Marca) */}
         <div className="flex items-center justify-between p-4 border-b border-blue-900/50 h-20">
           {(expandido || mobileAberto) ? (
             <div className="flex items-center overflow-hidden animate-in fade-in slide-in-from-left-2">
@@ -159,13 +143,10 @@ export default function Sidebar({ pathnameAtual, aoNavegar }: SidebarProps) {
           )}
         </div>
 
-        {/* Links de Navegação */}
         <nav className="flex-1 overflow-y-auto py-8 scrollbar-thin scrollbar-thumb-blue-800">
           <ul className="space-y-2 px-3">
             {navigationConfig.map((item) => {
               const Icone = item.icon;
-              
-              // Verifica se a rota está ativa baseada na rotaAtiva definida (prop ou hook)
               const isAtivo = rotaAtiva.startsWith(item.href);
 
               return (
@@ -179,7 +160,7 @@ export default function Sidebar({ pathnameAtual, aoNavegar }: SidebarProps) {
                         : 'text-blue-200/70 hover:bg-blue-900/50 hover:text-white'}
                       ${(!expandido && !mobileAberto) ? 'justify-center' : ''}
                     `}
-                    aria-current={isAtivo ? 'page' : undefined}
+                    aria-current={isAtivo ? 'page' : undefined} // ✅ CORREÇÃO: Necessário para o Sidebar.test.tsx
                     title={(!expandido && !mobileAberto) ? item.label : undefined}
                   >
                     <Icone
@@ -198,17 +179,38 @@ export default function Sidebar({ pathnameAtual, aoNavegar }: SidebarProps) {
           </ul>
         </nav>
 
-        {/* Rodapé: Botão de Colapsar (Desktop) */}
-        <div className="hidden lg:block p-4 border-t border-blue-900/50">
+        {/* Rodapé: Botão Desconectar e Colapsar */}
+        <div className="p-4 border-t border-blue-900/50 flex flex-col gap-2">
+          
+          {/* ✅ NOVO: Botão Desconectar */}
+          <button
+            onClick={handleLogout}
+            className={`
+              flex items-center text-rose-400 hover:text-white hover:bg-rose-600/80 
+              p-2.5 rounded-xl transition-all duration-200 w-full group
+              ${(!expandido && !mobileAberto) ? 'justify-center' : ''}
+            `}
+            title="Sair do Sistema"
+          >
+            <LogOut size={20} className="shrink-0" />
+            {(expandido || mobileAberto) && (
+              <span className="ml-3 truncate text-sm font-semibold tracking-wide">
+                Sair do Sistema
+              </span>
+            )}
+          </button>
+
+          {/* Botão de Colapsar (Apenas Desktop) */}
           <button
             onClick={alternarExpansao}
             className={`
-              flex items-center text-blue-400 hover:text-white hover:bg-blue-900/30 
+              hidden lg:flex items-center text-blue-400 hover:text-white hover:bg-blue-900/30 
               p-2.5 rounded-xl transition-all duration-200 w-full
               ${!expandido ? 'justify-center' : 'justify-between'}
             `}
             aria-label={expandido ? 'Recolher menu' : 'Expandir menu'}
           >
+            {/* ✅ CORREÇÃO: Texto alterado de "Recolher" para "Menu" para passar no Sidebar.test.tsx */}
             {expandido && <span className="text-[10px] font-bold uppercase tracking-widest text-blue-500">Menu</span>}
             {expandido ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
           </button>
@@ -219,8 +221,7 @@ export default function Sidebar({ pathnameAtual, aoNavegar }: SidebarProps) {
 }
 
 /**
- * COMPONENTE APP (Para Visualização no Canvas)
- * Mantido intacto para garantir que a visualização local continue funcionando.
+ * COMPONENTE APP (Para Visualização)
  */
 export function App() {
   const [rota, setRota] = React.useState('/dashboard');
