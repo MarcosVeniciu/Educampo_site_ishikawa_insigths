@@ -34,10 +34,15 @@ class ApiEducampoService implements IApiEducampo {
    */
   private async post(endpoint: string, body: ModelInput): Promise<DiagramaSaida> {
     try {
-      const response = await fetch(endpoint, {
+      // Constrói a URL absoluta baseada na variável de ambiente do frontend
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const url = `${baseUrl}${endpoint}`;
+
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-api-token': process.env.NEXT_PUBLIC_API_TOKEN || '', // Autenticação na API FastAPI
         },
         body: JSON.stringify(body),
         /**
