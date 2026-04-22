@@ -11,6 +11,22 @@ import PainelLayout from '@/app/(painel)/layout';
  * Corrigido com virtual mocks para next/navigation e suporte a jest-dom.
  */
 
+
+/**
+ * Mock Global das Fontes do Google (Next.js).
+ * * Motivo: O Next.js otimiza fontes durante o build, transformando-as em CSS. 
+ * No ambiente de testes (Node/Jest), o carregador de fontes não está disponível, 
+ * o que causa um "TypeError: Inter is not a function".
+ * * Este mock simula a execução da função de fonte e retorna um objeto compatível
+ * com o que o componente espera, evitando quebras no Layout e em testes de UI.
+ */
+jest.mock('next/font/google', () => ({
+  Inter: () => ({
+    className: 'inter-font-mock',
+    style: { fontFamily: 'Inter' },
+  }),
+}));
+
 // Mock do hook de roteamento do Next.js com a flag virtual para evitar erros de resolução
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),

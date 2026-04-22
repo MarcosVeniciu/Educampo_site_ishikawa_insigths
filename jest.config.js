@@ -5,6 +5,7 @@ module.exports = {
   // Ensina o Jest a entender o atalho "@/" do TypeScript
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
+    '\\.css$': 'identity-obj-proxy',
   },
   
   // Limpa os mocks automaticamente entre um teste e outro
