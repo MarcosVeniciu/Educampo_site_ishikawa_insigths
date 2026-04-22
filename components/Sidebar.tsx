@@ -9,6 +9,7 @@
 
 'use client';
 import React, { useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation'; // Importação dos hooks do Next.js
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -54,17 +55,26 @@ const navigationConfig = [
 
 /**
  * Propriedades esperadas pelo componente Sidebar.
+ * Tornadas OPCIONAIS para permitir que o componente funcione de forma autônoma (via Hooks)
+ * ou controlada (via Props, mantendo compatibilidade com o componente App de visualização).
  * @interface SidebarProps
  */
 export interface SidebarProps {
-  pathnameAtual: string;
-  aoNavegar: (path: string) => void;
+  pathnameAtual?: string;
+  aoNavegar?: (path: string) => void;
 }
 
 /**
  * Componente Sidebar com suporte a Mobile Drawer e Identidade Visual Azul.
  */
 export default function Sidebar({ pathnameAtual, aoNavegar }: SidebarProps) {
+  // Hooks do Next.js para navegação autônoma
+  const router = useRouter();
+  const pathNameHook = usePathname();
+
+  // Determina a rota ativa: prioriza a prop (se enviada) ou o hook do Next.js
+  const rotaAtiva = pathnameAtual || pathNameHook || '';
+
   // Estado para controle de expansão no Desktop
   const [expandido, setExpandido] = useState(true);
   // Estado para controle do menu flutuante (Drawer) no Mobile
@@ -81,11 +91,15 @@ export default function Sidebar({ pathnameAtual, aoNavegar }: SidebarProps) {
   const alternarExpansao = () => setExpandido(!expandido);
 
   /**
-   * Executa a navegação e garante que o menu mobile seja fechado.
+   * Executa a navegação: prioriza a função de callback ou usa o router do Next.js.
    * @param {string} path - Rota de destino.
    */
   const handleNavegacao = (path: string) => {
-    aoNavegar(path);
+    if (aoNavegar) {
+      aoNavegar(path);
+    } else {
+      router.push(path);
+    }
     setMobileAberto(false);
   };
 
@@ -151,8 +165,8 @@ export default function Sidebar({ pathnameAtual, aoNavegar }: SidebarProps) {
             {navigationConfig.map((item) => {
               const Icone = item.icon;
               
-              // CORREÇÃO APLICADA AQUI: Fallback para string vazia caso pathnameAtual seja undefined
-              const isAtivo = (pathnameAtual || '').startsWith(item.href);
+              // Verifica se a rota está ativa baseada na rotaAtiva definida (prop ou hook)
+              const isAtivo = rotaAtiva.startsWith(item.href);
 
               return (
                 <li key={item.href}>
@@ -206,6 +220,7 @@ export default function Sidebar({ pathnameAtual, aoNavegar }: SidebarProps) {
 
 /**
  * COMPONENTE APP (Para Visualização no Canvas)
+ * Mantido intacto para garantir que a visualização local continue funcionando.
  */
 export function App() {
   const [rota, setRota] = React.useState('/dashboard');

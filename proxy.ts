@@ -1,5 +1,5 @@
 /**
- * @fileoverview Middleware de Segurança do Next.js.
+ * @fileoverview Proxy de Segurança (Antigo Middleware).
  * Atua como o "Guardião de Rotas" (Route Guard) executando no servidor.
  * * Responsabilidades:
  * 1. Interceptar requisições para rotas protegidas no painel.
@@ -20,7 +20,7 @@ export const config = {
   ],
 };
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   // Obtém o token do Cookie HttpOnly
   const token = request.cookies.get('token')?.value;
   const { pathname } = request.nextUrl;
@@ -47,3 +47,5 @@ export function middleware(request: NextRequest) {
 
   return NextResponse.next();
 }
+
+export { proxy as middleware };
