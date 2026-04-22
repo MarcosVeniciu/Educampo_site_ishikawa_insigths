@@ -3,18 +3,12 @@
 /**
  * @fileoverview Página de Login do Educampo Insights.
  * Implementa a interface de autenticação utilizando HttpOnly Cookies (Fase 2).
- * * Mudanças Estruturais para VS Code:
- * 1. Utiliza useRouter de 'next/navigation' para navegação SPA otimizada.
- * 2. Remove completamente a manipulação manual de localStorage/sessionStorage.
- * 3. Delega a persistência do token ao navegador via cabeçalho Set-Cookie da API local.
- * 4. Foca no contrato de segurança estabelecido nos testes da Fase 1.
  */
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
-  // Estados locais para controle do formulário e feedback
   const [email, setEmail] = useState('produtor@educampo.com.br');
   const [password, setPassword] = useState('senha123');
   const [loading, setLoading] = useState(false);
@@ -22,18 +16,12 @@ export default function LoginPage() {
   
   const router = useRouter();
 
-  /**
-   * Processa a submissão do login enviando os dados para a API Route local.
-   * @param e Evento de submissão do formulário.
-   */
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      // 1. Requisição para o nosso Backend-for-Frontend (BFF)
-      // O servidor (/api/auth) validará as credenciais e retornará o cabeçalho Set-Cookie
       const response = await fetch('/api/auth', {
         method: 'POST',
         headers: {
@@ -44,14 +32,10 @@ export default function LoginPage() {
 
       const data = await response.json();
 
-      // 2. Validação da resposta
       if (!response.ok) {
         throw new Error(data.error || 'Falha na autenticação. Verifique e-mail e senha.');
       }
 
-      // 3. Redirecionamento em caso de sucesso
-      // Como o cookie HttpOnly foi definido pela resposta HTTP, o Middleware 
-      // do Next.js agora permitirá o acesso às rotas protegidas automaticamente.
       router.push('/dashboard');
       
     } catch (err: any) {
@@ -64,7 +48,6 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 border border-slate-100">
         
-        {/* Identidade Visual */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-100 mb-4">
             <svg 
@@ -81,10 +64,8 @@ export default function LoginPage() {
           <p className="text-sm text-slate-500 mt-2">Acesse seus diagnósticos de produção</p>
         </div>
 
-        {/* Formulário de Autenticação */}
         <form onSubmit={handleLogin} className="space-y-5">
           
-          {/* Alerta de Erro de Negócio ou Conexão */}
           {error && (
             <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-sm rounded-lg flex items-start animate-in fade-in slide-in-from-top-1">
               <svg className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -94,12 +75,12 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Campo de E-mail */}
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-              E-mail corporativo
+            <label htmlFor="email" className="block text-sm font-semibold text-slate-700 mb-1.5">
+              E-mail do Consultor
             </label>
             <input
+              id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -110,12 +91,12 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* Campo de Senha */}
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+            <label htmlFor="password" className="block text-sm font-semibold text-slate-700 mb-1.5">
               Senha de acesso
             </label>
             <input
+              id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -126,7 +107,6 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* Ação de Login */}
           <button
             type="submit"
             disabled={loading}

@@ -16,8 +16,7 @@ import {
   LayoutDashboard, 
   GitMerge, 
   TrendingUp, 
-  Settings,
-  LucideIcon
+  Settings
 } from 'lucide-react';
 
 /**
@@ -150,7 +149,9 @@ export default function Sidebar({ pathnameAtual, aoNavegar }: SidebarProps) {
           <ul className="space-y-2 px-3">
             {navigationConfig.map((item) => {
               const Icone = item.icon;
-              const isAtivo = pathnameAtual.startsWith(item.href);
+              
+              // CORREÇÃO APLICADA AQUI: Fallback para string vazia caso pathnameAtual seja undefined
+              const isAtivo = (pathnameAtual || '').startsWith(item.href);
 
               return (
                 <li key={item.href}>
@@ -204,7 +205,6 @@ export default function Sidebar({ pathnameAtual, aoNavegar }: SidebarProps) {
 
 /**
  * COMPONENTE APP (Para Visualização no Canvas)
- * Nota: Remova este bloco ao copiar para o arquivo de componente individual.
  */
 export function App() {
   const [rota, setRota] = React.useState('/dashboard');
@@ -215,9 +215,6 @@ export function App() {
         <div className="text-center">
           <p className="text-sm font-medium uppercase tracking-widest mb-2">Área de Conteúdo</p>
           <p className="text-2xl font-bold text-slate-800">Página: {rota}</p>
-          <p className="mt-4 text-xs max-w-xs mx-auto">
-            Redimensione a tela para testar o comportamento do Menu Hambúrguer (Mobile) e do Drawer.
-          </p>
         </div>
       </main>
     </div>

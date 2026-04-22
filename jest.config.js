@@ -2,6 +2,8 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'jest-environment-jsdom',
   
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  
   // Ensina o Jest a entender o atalho "@/" do TypeScript
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
