@@ -1,9 +1,16 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ChevronLeft, Info, AlertTriangle, CheckCircle2 } from "lucide-react";
 import IshikawaCard from "@/components/IshikawaCard";
+import { useAppStore } from "@/store/useAppStore";
+import { 
+  calcularProducaoTotal, 
+  calcularLitrosPorHectare, 
+  calcularLitrosPorTrabalhador, 
+  avaliarStatus 
+} from "@/utils/calculos";
 
 /**
  * @file page.tsx (Diagnóstico Dinâmico)
@@ -32,91 +39,88 @@ interface DiagnosticData {
 export default function DiagnosticoPage() {
   const params = useParams();
   const router = useRouter();
-  const [data, setData] = useState<DiagnosticData | null>(null);
-  const [loading, setLoading] = useState(true);
 
   const tipo = params.tipo as string;
+  
+  const diagnosticos = useAppStore((state) => state.diagnosticos);
+  const dadosFazenda = useAppStore((state) => state.dadosFazenda);
+  const isLoaded = useAppStore((state) => state.isLoaded);
+
+  const [loading, setLoading] = useState(true);
+
+  // Transforma o status matemático (baixo/medio/alto) em status visual para a UI
+  const mapStatus = (resultado: 'baixo' | 'medio' | 'alto', invert: boolean = false): "bom" | "alerta" | "critico" => {
+    if (invert) return resultado === 'baixo' ? 'bom' : resultado === 'alto' ? 'critico' : 'alerta';
+    return resultado === 'alto' ? 'bom' : resultado === 'baixo' ? 'critico' : 'alerta';
+  };
+
+  const data = useMemo<DiagnosticData | null>(() => {
+    if (!dadosFazenda || !diagnosticos[tipo]) return null;
+
+    const producaoTotal = calcularProducaoTotal(
+      dadosFazenda.vacas_em_lactacao_cabecas,
+      dadosFazenda.producao_leite_l_vaca_dia || 0
+    );
+
+    let title = "";
+    let description = "";
+    let indicator = "";
+    let value = "";
+    let status: "bom" | "alerta" | "critico" = "alerta";
+
+    switch (tipo) {
+      case "trabalhador":
+        title = "Produção por Trabalhador";
+        description = "Análise da eficiência produtiva em relação à mão de obra disponível.";
+        indicator = "L/homem/dia";
+        const valTrab = calcularLitrosPorTrabalhador(producaoTotal, dadosFazenda.funcionarios_qtd);
+        value = valTrab.toFixed(0) + " L";
+        status = mapStatus(avaliarStatus(valTrab, 300, 600)); // Limites base de exemplo
+        break;
+      case "hectare":
+        title = "Produção por Hectare";
+        description = "Análise da eficiência produtiva em relação à área utilizada.";
+        indicator = "L/ha/dia";
+        const valHa = calcularLitrosPorHectare(producaoTotal, dadosFazenda.area_destinada_atividade_ha);
+        value = valHa.toFixed(0) + " L";
+        status = mapStatus(avaliarStatus(valHa, 15, 30));
+        break;
+      case "ccs":
+        title = "Qualidade do Leite (CCS)";
+        description = "Análise da saúde do rebanho e higiene dos processos de ordenha.";
+        indicator = "Células Somáticas / mL";
+        const valCcs = dadosFazenda.ccs_celulas_ml || 0;
+        value = (valCcs / 1000).toFixed(0) + "k";
+        status = mapStatus(avaliarStatus(valCcs, 200000, 400000, true), true); // Invertido: CCS baixo = bom
+        break;
+      case "produtividade":
+        title = "Produtividade por Vaca";
+        description = "Análise do volume de leite produzido individualmente.";
+        indicator = "L/vaca/dia";
+        const valProd = dadosFazenda.producao_leite_l_vaca_dia || 0;
+        value = valProd.toFixed(1) + " L";
+        status = mapStatus(avaliarStatus(valProd, 15, 25));
+        break;
+    }
+
+    return {
+      title,
+      description,
+      indicator,
+      value,
+      status,
+      categories: diagnosticos[tipo].categories // <-- LÊ AS CAUSAS REAIS DA IA
+    };
+  }, [tipo, dadosFazenda, diagnosticos]);
 
   useEffect(() => {
-    /**
-     * Simulação de Fetch de Dados.
-     * Na Fase Final, aqui será feita a chamada para a API FastAPI.
-     */
-    const fetchDiagnostic = () => {
-      setLoading(true);
-      
-      // Simulação de delay da rede
-      setTimeout(() => {
-        // Mock de dados baseado no tipo
-        const mockData: Record<string, DiagnosticData> = {
-          trabalhador: {
-            title: "Produção por Trabalhador",
-            description: "Análise da eficiência produtiva em relação à mão de obra disponível.",
-            indicator: "L/homem/dia",
-            value: "420 L",
-            status: "alerta",
-            categories: [
-              {
-                id: "mao-de-obra",
-                label: "Mão de Obra",
-                emoji: "👥",
-                impact: 85,
-                color: "#b91c1c",
-                light: "#fef2f2",
-                border: "#fca5a5",
-                tag: "Fator Crítico",
-                causes: [
-                  { text: "Falta de treinamento em rotinas de ordenha", severity: "alta", detail: "Gera atrasos e perda de padrão técnico." },
-                  { text: "Alta rotatividade de peões", severity: "media", detail: "Dificulta a manutenção de processos." }
-                ]
-              },
-              {
-                id: "metodo",
-                label: "Método",
-                emoji: "📋",
-                impact: 40,
-                color: "#d97706",
-                light: "#fffbeb",
-                border: "#fef3c7",
-                tag: "Otimização Necessária",
-                causes: [
-                  { text: "Fluxo de manejo ineficiente", severity: "media", detail: "Deslocamentos desnecessários dos animais." }
-                ]
-              }
-            ]
-          },
-          ccs: {
-            title: "Qualidade do Leite (CCS)",
-            description: "Análise da saúde do rebanho e higiene dos processos de ordenha.",
-            indicator: "Células Somáticas / mL",
-            value: "580k",
-            status: "critico",
-            categories: [
-              {
-                id: "material",
-                label: "Material",
-                emoji: "🧪",
-                impact: 92,
-                color: "#b91c1c",
-                light: "#fef2f2",
-                border: "#fca5a5",
-                tag: "Risco Sanitário",
-                causes: [
-                  { text: "Detergente de limpeza vencido", severity: "alta", detail: "Limpeza ineficiente das tubulações." }
-                ]
-              }
-            ]
-          }
-        };
-
-        // Fallback para tipos não mapeados no mock
-        setData(mockData[tipo] || mockData["trabalhador"]);
-        setLoading(false);
-      }, 600);
-    };
-
-    if (tipo) fetchDiagnostic();
-  }, [tipo]);
+    if (isLoaded && !dadosFazenda) {
+      // Prevenção caso o usuário recarregue a página (F5) e o Zustand não tenha hidratado
+      router.push('/carregando');
+    } else if (data) {
+      setLoading(false);
+    }
+  }, [isLoaded, dadosFazenda, data, router]);
 
   if (loading) {
     return (

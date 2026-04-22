@@ -1,17 +1,30 @@
 import { NextResponse } from 'next/server';
-import { mockHectare } from '@/services/apiEducampo/mocks';
 
 export async function POST(request: Request) {
   try {
-    // Extrai os dados enviados pelo frontend (será usado futuramente pela IA real)
-    const _body = await request.json();
+    const body = await request.json();
     
-    // Simula o tempo de resposta da LLM (900ms)
-    await new Promise((resolve) => setTimeout(resolve, 900));
+    // Obtém as credenciais do servidor a partir do .env
+    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || '';
+    const apiToken = process.env.API_TOKEN || process.env.NEXT_PUBLIC_API_TOKEN || '';
     
-    // Retorna o diagnóstico focado em Produtividade por Hectare
-    return NextResponse.json(mockHectare);
+    const response = await fetch(`${apiUrl}/api/diagnostico/hectare`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-token': apiToken,
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Erro na API real: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return NextResponse.json(data);
   } catch (error) {
+    console.error('[API Educampo Proxy] Erro em Hectare:', error);
     return NextResponse.json({ error: 'Erro ao processar diagnóstico' }, { status: 500 });
   }
 }
