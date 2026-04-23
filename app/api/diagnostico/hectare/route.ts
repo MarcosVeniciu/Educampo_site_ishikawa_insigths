@@ -6,13 +6,18 @@ export async function POST(request: Request) {
     
     // Obtém as credenciais do servidor a partir do .env
     const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || '';
-    const apiToken = process.env.API_TOKEN || process.env.NEXT_PUBLIC_API_TOKEN || '';
+    
+    // Repassa o token original enviado pelo frontend ou faz fallback para o .env
+    const clientToken = request.headers.get('x-api-token');
+    const cookieHeader = request.headers.get('cookie') || '';
+    const apiToken = clientToken || process.env.API_TOKEN || process.env.NEXT_PUBLIC_API_TOKEN || '';
     
     const response = await fetch(`${apiUrl}/api/diagnostico/hectare`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-token': apiToken,
+        'Cookie': cookieHeader,
       },
       body: JSON.stringify(body),
     });
