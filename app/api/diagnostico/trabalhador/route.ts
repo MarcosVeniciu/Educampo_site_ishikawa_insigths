@@ -23,8 +23,9 @@ export async function POST(request: Request) {
 
     const data = await response.json();
     return NextResponse.json(data);
-  } catch (error) {
+  } catch (error: any) {
     console.error('[API Educampo Proxy] Erro em Trabalhador:', error);
-    return NextResponse.json({ error: 'Erro ao processar diagnóstico' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: 'Erro ao processar diagnóstico', details: errorMessage }, { status: 500 });
   }
 }
