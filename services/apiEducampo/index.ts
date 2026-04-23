@@ -11,6 +11,7 @@
  */
 
 import { ModelInput, DiagramaSaida } from './types';
+import { mockCcs, mockHectare, mockTrabalhador, mockProdutividade } from './mocks';
 
 /**
  * Interface que define os métodos disponíveis no serviço Educampo.
@@ -66,8 +67,16 @@ class ApiEducampoService implements IApiEducampo {
 
       return await response.json();
     } catch (error: any) {
-      console.error(`[API Educampo Error] Falha ao acessar ${endpoint}:`, error.message);
-      throw error;
+      console.warn(`[API Educampo] Falha de conexão ou erro no servidor ao acessar ${endpoint}. Iniciando Fallback (Mock). Erro original:`, error.message);
+      
+      // Fallback: Retorna o mock correspondente para não quebrar a interface do usuário
+      if (endpoint.includes('ccs')) return mockCcs;
+      if (endpoint.includes('hectare')) return mockHectare;
+      if (endpoint.includes('trabalhador')) return mockTrabalhador;
+      if (endpoint.includes('produtividade')) return mockProdutividade;
+      
+      // Se for um endpoint desconhecido e não houver mock, propaga o erro
+      throw new Error(`Falha crítica e nenhum mock disponível para ${endpoint}`);
     }
   }
 
