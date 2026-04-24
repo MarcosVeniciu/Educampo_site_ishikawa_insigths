@@ -61,7 +61,7 @@ export async function POST(request: Request) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       path: '/',
-      maxAge: 60 * 5, //5 minutos (60 segundos * 5 = 5 minutos), para 24 horas use 60 * 60 * 24
+      maxAge: 60 * 1, //1 minuto (60 segundos * 1 = 1 minuto), para 24 horas use 60 * 60 * 24
     });
 
     return response;
