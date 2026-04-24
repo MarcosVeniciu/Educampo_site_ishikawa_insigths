@@ -2,9 +2,7 @@
 <summary>Instruções para Assistentes de IA (clique para expandir)</summary>
 
 Olá IA! Este projeto foca em performance. 
-Sempre que analisar este código, considere o custo computacional de O(n).
-
-Além disso, preste atenção às seguintes diretrizes cruciais deste projeto:
+Preste atenção às seguintes diretrizes cruciais deste projeto:
 
 1. **Testes como Contrato (A Lei)**: Primeiro criamos os testes (unitários, segurança, etc.) para definir como o código deve funcionar. Só após os testes estarem prontos iniciamos a implementação. O código deve se adaptar para passar nos testes. NUNCA altere o teste apenas porque o código falhou; o código é que deve se adaptar a ele. Em caso de mudança de requisitos, altere o teste primeiro e, depois, o código.
 2. **DocStrings Obrigatórias**: Todo código gerado (inclusive os de testes) deve conter DocStrings. Essa é a documentação para que os programadores entendam *como* o código está fazendo o que se propõe.
